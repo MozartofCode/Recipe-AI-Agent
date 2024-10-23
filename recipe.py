@@ -3,9 +3,11 @@
 from dotenv import load_dotenv
 import os
 import requests
+import openai
 
 load_dotenv()
 
+openai.api_key = os.getenv('OPENAI_API_KEY')
 spoonacular_api_key = os.getenv('SPOONACULAR_API_KEY')
 
 
@@ -28,6 +30,20 @@ def get_dish(ingredients):
         print(f"Error: {response.status_code}")
         return None
 
-print(get_dish("apple, sugar, flour"))
 
-
+# Tool for extracting ingredients from a text
+def extract_ingredients(text):
+    # Define the prompt for ingredient extraction
+    prompt = f"Extract the ingredients from the following text:\n{text}\nIngredients:"
+   
+      # Make the request to OpenAI's GPT-3.5 API
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # Using GPT-3.5-turbo
+        messages=[
+            {"role": "system", "content": "You are an assistant that extracts ingredients from text."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    
+    # Parse the response and return the ingredients
+    return response["choices"][0]["message"]["content"]

@@ -12,7 +12,7 @@ import os
 import openai
 from langchain_core.tools import Tool
 
-from recipe import get_dish
+from recipe import get_dish, extract_ingredients
 
 load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -21,11 +21,17 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 memory = MemorySaver()
 model = ChatOpenAI(model_name="gpt-3.5-turbo")
 
+
 tools = [
     Tool(
         func=get_dish,
         name="Dish_Recommendation",
-        description="Gives a dish recommendation based on the given prompt."
+        description="Gives a dish recommendation based on the given ingredients."
+    ),
+    Tool(
+        func=extract_ingredients,
+        name="Ingredient_Extraction",
+        description="Extracts ingredients from a given prompt."
     )
 ]
 
@@ -37,13 +43,7 @@ print("Agent created")
 # Use the agent
 config = {"configurable": {"thread_id": "abc123"}}
 for chunk in agent_executor.stream(
-    {"messages": [HumanMessage(content="hi im bob! and i live in sf")]}, config
-):
-    print(chunk)
-    print("----")
-
-for chunk in agent_executor.stream(
-    {"messages": [HumanMessage(content="What should I eat?")]}, config
+    {"messages": [HumanMessage(content="Hi, my name is Bob and in my fridge I have apples, flour and sugar")]}, config
 ):
     print(chunk)
     print("----")
