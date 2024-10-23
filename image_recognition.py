@@ -1,9 +1,9 @@
 from PIL import Image
 import openai
-
+import requests
 from dotenv import load_dotenv
 import os
 import openai
 
 load_dotenv()
-openai.api_key = os.getenv('OPENAI_KEY')
+openai.api_key = os.getenv('OPENAI_API_KEY')
