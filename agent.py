@@ -92,7 +92,3 @@ def make_a_dish(ingredients):
     inputs = {'ingredients': ingredients}
     result = meal_crew.kickoff(inputs=inputs)
     return result
-
-
-
-
