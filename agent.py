@@ -32,10 +32,18 @@ def make_a_dish(ingredients):
                   " the agent will find the top 3 dishes that can be made with them",
         verbose=True,
         allow_delegation=False,
-        tools =[scrape_tool, search_tool]
+        tools=[scrape_tool, search_tool]
     )
 
-    #TODO add the agent that will find the matching drink for the dish
+    find_dish = Agent(
+        role="Food Pairing Agent",
+        goal="Finds the right drinks for the food",
+        backstory="Specializing in making creative and amazing drink pairing with given dishes. These drink could be like"
+                  " specific types of wine, beer etc or it could just be cola, sprite, ice tea as well.",
+        verbose=True,
+        allow_delegation=False,
+        tools=[scrape_tool, search_tool]
+    )
 
     # TASKS
     dish = Task(
@@ -52,15 +60,28 @@ def make_a_dish(ingredients):
         agent=dish
     )
 
+    drink = Task(
+        description=(
+            "The task is to find the right drinks for the given dish",
+            " {dish}"
+        ),
+        expected_output=(
+            "The right drinks for the given dish are:"
+            "1- Drink1"
+            "2- Drink2"
+            "3- Drink3",
+        ),
+        agent=drink
+    )
+
     # Define the crew with agents and tasks
-    poker_crew = Crew(
-        agents=[find_dish],
-        tasks=[dish],
+    meal_crew = Crew(
+        agents=[find_dish, find_dish],
+        tasks=[dish, drink],
         manager_llm=ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7),
         process=Process.sequential,
         verbose=True
     )
 
-
-    result = poker_crew.kickoff(inputs=ingredients)
+    result = meal_crew.kickoff(inputs=ingredients)
     return result
