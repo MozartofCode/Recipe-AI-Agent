@@ -18,7 +18,7 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 serper_api_key = os.getenv('SERPER_API_KEY')
 os.environ["OPENAI_MODEL_NAME"] = 'gpt-3.5-turbo'
 
-
+# Defining the output model for having a structured output from the agents
 class DishPair(BaseModel):
     dish1: str
     dish2: str
@@ -28,6 +28,9 @@ class DishPair(BaseModel):
     drink3: str
 
 
+# Function to create a dish with the given ingredients
+# :param ingredients: list of ingredients
+# :return: the top 3 dishes that can be made with the given ingredients and the drinks that can be paired with them
 def make_a_dish(ingredients):
 
     search_tool = SerperDevTool()

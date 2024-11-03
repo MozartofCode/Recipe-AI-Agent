@@ -1,6 +1,7 @@
 # @Author: Bertan Berker
 # @Language: Python
-# This is the code for the finance agent that uses OpenAI's GPT-3.5-turbo model to provide financial advice to users
+# This is the code for the finance agent that uses OpenAI's GPT-3.5-turbo model to provide recipe recommendations 
+# based on the user's ingredients
 
 # Import relevant functionality
 from flask import Flask, request, jsonify
