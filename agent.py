@@ -1,56 +1,66 @@
 # @Author: Bertan Berker
 # @Language: Python
-#
+# This is an multi-agent system that creates a recipe and finds a 
+# matching drink for the food as well as the history of the food
 
-# Import relevant functionality
-from langchain_core.messages import HumanMessage
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent
-from langchain_openai import ChatOpenAI
+
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from crewai import Agent, Task, Crew, Process
+from crewai_tools import ScrapeWebsiteTool, SerperDevTool
+import warnings
+warnings.filterwarnings('ignore')
 import os
-import openai
-from langchain_core.tools import Tool
-from langchain.prompts import PromptTemplate
-
-from recipe import get_dish
 
 load_dotenv()
-openai.api_key = os.getenv('OPENAI_API_KEY')
-
-# Create the agent
-memory = MemorySaver()
-model = ChatOpenAI(model_name="gpt-3.5-turbo")
-
-# Create a prompt template for extracting ingredients
-prompt_template = PromptTemplate(
-    input_variables=["message"],
-    template="Extract only the ingredients from the following text:\n\n{message}\n\nIngredients:"
-)
+openai_api_key = os.getenv('OPENAI_API_KEY')
+serper_api_key = os.getenv('SERPER_API_KEY')
+os.environ["OPENAI_MODEL_NAME"] = 'gpt-3.5-turbo'
 
 
-tools = [
-    Tool(
-        func=get_dish,
-        name="Dish_Recommendation",
-        description="Gives a dish recommendation based on the given ingredients."
+def make_a_dish(ingredients):
+
+    search_tool = SerperDevTool()
+    scrape_tool = ScrapeWebsiteTool()
+
+    # AGENTS
+    find_dish = Agent(
+        role="Dish Maker Agent",
+        goal="Finds the top 3 dishes based on the ingredients that are present in the fridge",
+        backstory="Specializing in making creative and amazing dishes and incredibly knowledgable"
+                  " about the ingredients and the dishes that can be made with them. Given the ingredients: {ingredients}"
+                  " the agent will find the top 3 dishes that can be made with them",
+        verbose=True,
+        allow_delegation=False,
+        tools =[scrape_tool, search_tool]
     )
-]
+
+    #TODO add the agent that will find the matching drink for the dish
+
+    # TASKS
+    dish = Task(
+        description=(
+            "The task is to find the top 3 dishes that can be made with the given ingredients",
+            " {ingredients}"
+        ),
+        expected_output=(
+            "The top 3 dishes that can be made with the given ingredients are:"
+            "1- Dish1"
+            "2- Dish2"
+            "3- Dish3",
+        ),
+        agent=dish
+    )
+
+    # Define the crew with agents and tasks
+    poker_crew = Crew(
+        agents=[find_dish],
+        tasks=[dish],
+        manager_llm=ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7),
+        process=Process.sequential,
+        verbose=True
+    )
 
 
-agent_executor = create_react_agent(model, tools, checkpointer=memory)
-
-print("Agent created")
-
-user_message = "Hi, my name is Bob and in my fridge I have apples, flour and sugar. I believe life's meaning is 42"
-
-formatted_prompt = prompt_template.format(message=user_message)
-
-ingredient_response = ""
-# Use the agent
-config = {"configurable": {"thread_id": "abc123"}}
-for chunk in agent_executor.stream(
-    {"messages": [HumanMessage(content=formatted_prompt)]}, config
-):
-    print(chunk)
-    print("----")
+    result = poker_crew.kickoff(inputs=ingredients)
+    return result
