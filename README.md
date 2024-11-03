@@ -1,4 +1,5 @@
 # Recipe-App
 
+This app takes the ingredients in a fridge as an input and gives a possible dish and drinks pairs using a crewAI multi-agent system.
 
-This app takes an image as an input and gives a dish from the ingredients from the photo using an AI agent with Langchain
+Future Improvements: Using a CLIP model for recognizing the ingredients given the picture of a fridge for smoother application
