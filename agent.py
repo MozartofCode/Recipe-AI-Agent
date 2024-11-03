@@ -11,11 +11,21 @@ from crewai_tools import ScrapeWebsiteTool, SerperDevTool
 import warnings
 warnings.filterwarnings('ignore')
 import os
+from pydantic import BaseModel
 
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 serper_api_key = os.getenv('SERPER_API_KEY')
 os.environ["OPENAI_MODEL_NAME"] = 'gpt-3.5-turbo'
+
+
+class DishPair(BaseModel):
+    dish1: str
+    dish2: str
+    dish3: str
+    drink1: str
+    drink2: str
+    drink3: str
 
 
 def make_a_dish(ingredients):
@@ -35,7 +45,7 @@ def make_a_dish(ingredients):
         tools=[scrape_tool, search_tool]
     )
 
-    find_dish = Agent(
+    find_drink = Agent(
         role="Food Pairing Agent",
         goal="Finds the right drinks for the food",
         backstory="Specializing in making creative and amazing drink pairing with given dishes. These drink could be like"
@@ -47,33 +57,30 @@ def make_a_dish(ingredients):
 
     # TASKS
     dish = Task(
-        description=(
-            "The task is to find the top 3 dishes that can be made with the given ingredients",
-            " {ingredients}"
-        ),
-        expected_output=(
+        description=
+            "The task is to find the top 3 dishes that can be made with the given ingredients"
+            " {ingredients}",
+        expected_output=
             "The top 3 dishes that can be made with the given ingredients are:"
             "1- Dish1"
             "2- Dish2"
             "3- Dish3",
-        ),
-        agent=dish
+        agent=find_dish
     )
 
     drink = Task(
-        description=(
+        description=
             "The task is to find the right drinks for the given dish",
-            " {dish}"
-        ),
-        expected_output=(
+        expected_output=
             "The right drinks for the given dish are:"
             "1- Drink1"
             "2- Drink2"
             "3- Drink3",
-        ),
-        agent=drink
+        output_json=DishPair,
+        agent=find_drink
     )
 
+    
     # Define the crew with agents and tasks
     meal_crew = Crew(
         agents=[find_dish, find_dish],
@@ -82,6 +89,10 @@ def make_a_dish(ingredients):
         process=Process.sequential,
         verbose=True
     )
-
-    result = meal_crew.kickoff(inputs=ingredients)
+    inputs = {'ingredients': ingredients}
+    result = meal_crew.kickoff(inputs=inputs)
     return result
+
+
+
+
